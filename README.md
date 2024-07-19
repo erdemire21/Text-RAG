@@ -1,4 +1,4 @@
-# text-rag
+# Text-RAG
 Retrieval Augmented Generation from a specified path containing pdf and txt files.
 
 Compatible only with HuggingFace local models.
