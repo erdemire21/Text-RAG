@@ -8,9 +8,9 @@ To get started
 ```python
 import rag_pipeline
 
-rag = rag_pipeline.RAGPipeline(directory='middlebury', max_new_tokens=1000)
+rag = rag_pipeline.RAGPipeline(model_name="microsoft/Phi-3-mini-4k-instruct", directory='files', max_new_tokens=1000)
 ```
-In this example, we create an instance of the `RAGPipeline` class, specifying the `directory` parameter as `'middlebury'` and the `max_new_tokens` parameter as `1000`.
+In this example, we create an instance of the `RAGPipeline` class, specifying the `directory` parameter as `'middlebury'`, the model as phi-3 and the `max_new_tokens` parameter as `1000`.
 
 ### Step 2: Define the query
 ```python
