@@ -3,6 +3,12 @@ Retrieval Augmented Generation from a specified path containing pdf and txt file
 
 Compatible only with HuggingFace local models.
 
+**Install Packages**
+
+To install the required packages, run the following command in your terminal:
+```bash
+pip install numpy==1.26.4 langchain-community==0.2.7 langchain==0.2.9 transformers==4.42.4 torch==2.3.1
+```
 To get started
 ### Step 1: Create an instance of the `RAGPipeline` class
 ```python
