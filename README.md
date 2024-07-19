@@ -6,7 +6,7 @@ Compatible only with HuggingFace local models.
 To get started
 ### Step 1: Create an instance of the `RAGPipeline` class
 ```python
-import rag_pipeline
+import text_rag
 
 rag = rag_pipeline.RAGPipeline(model_name="microsoft/Phi-3-mini-4k-instruct", directory='files', max_new_tokens=1000)
 ```
