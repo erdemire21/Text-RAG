@@ -12,9 +12,9 @@ pip install numpy==1.26.4 langchain-community==0.2.7 langchain==0.2.9 transforme
 To get started
 ### Step 1: Create an instance of the `RAGPipeline` class
 ```python
-import text_rag
+from text_rag import RAGPipeline
 
-rag = rag_pipeline.RAGPipeline(model_name="microsoft/Phi-3-mini-4k-instruct", directory='files', max_new_tokens=1000)
+rag = RAGPipeline(model_name="microsoft/Phi-3-mini-4k-instruct", directory='your_directory', max_new_tokens=1000)
 ```
 In this example, we create an instance of the `RAGPipeline` class, specifying the `directory` parameter as `'middlebury'`, the model as phi-3 and the `max_new_tokens` parameter as `1000`.
 
@@ -25,6 +25,19 @@ query = "What is the penalty function used in the evaluation?"
 
 ### Step 3: Run the RAG pipeline
 ```python
-rag.rag_pipeline(query)
+rag(query)
 ```
 Finally, we call the `rag_pipeline` method on the `rag` object, passing the query as an argument. This will generate a RAG pipeline for the given query.
+
+## You can also load an index!
+
+```python
+# Initialize RAGPipeline
+rag = RAGPipeline(directory='your_directory', max_new_tokens=500)
+
+# Load the saved index
+rag.load_index('path_to_saved_index')
+
+# Run
+rag(query)
+```
