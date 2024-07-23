@@ -3,6 +3,7 @@ from urllib.request import urlretrieve
 import warnings
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import torch
+import bitsandbytes as bnb
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain_community.llms import HuggingFacePipeline
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
@@ -12,7 +13,7 @@ from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 
 class RAGPipeline:
-    def __init__(self, model_name="microsoft/Phi-3-mini-4k-instruct", directory='files', max_new_tokens=500):
+    def __init__(self, model_name="microsoft/Phi-3-mini-4k-instruct", directory='files', max_new_tokens=500, chunk_size = 256, chunk_overlap = 50, k_chunks = 5):
         self.model_name = model_name
         self.max_new_tokens = max_new_tokens
         self.embeddings = None
@@ -21,11 +22,17 @@ class RAGPipeline:
         self.retriever = None
         self.retrievalQA = None
         self.directory = directory
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.k_chunks = k_chunks
         self.load_model()
-
-    def prepare_documents(self, directory=None, chunk_size=700, chunk_overlap=50):
+        
+    def prepare_documents(self, directory=None):
         if directory is None:
             directory = self.directory
+            
+        chunk_size = self.chunk_size
+        chunk_overlap = self.chunk_overlap
 
         pdf_docs = []
         txt_docs = []
@@ -52,12 +59,13 @@ class RAGPipeline:
         )
         docs_after_split = text_splitter.split_documents(all_docs)
         return docs_after_split
-
+    
+    # can also use dunzhang/stella_en_400M_v5
     def create_embeddings(self, model_name="sentence-transformers/all-MiniLM-l6-v2"):
         if self.embeddings is None:
             self.embeddings = HuggingFaceBgeEmbeddings(
                 model_name=model_name,
-                model_kwargs={'device':'cuda'},
+                model_kwargs={'device':'cuda', 'trust_remote_code': True},
                 encode_kwargs={'normalize_embeddings': True}
             )
         return self.embeddings
@@ -95,7 +103,8 @@ class RAGPipeline:
             self.llm = HuggingFacePipeline(pipeline=pipe)
         return self.llm
 
-    def create_retriever(self, vectorstore, search_type="similarity", k=3):
+    def create_retriever(self, vectorstore, search_type="similarity"):
+        k = self.k_chunks
         if self.retriever is None:
             self.retriever = vectorstore.as_retriever(search_type=search_type, search_kwargs={"k": k})
         return self.retriever
@@ -118,17 +127,21 @@ class RAGPipeline:
         return self.retrievalQA.invoke({"query": query})
 
 
-    def create_index(self, directory=None, chunk_size=700, chunk_overlap=50, index_path='faiss_index'):
+    def create_index(self, directory=None, index_path='faiss_index'):
         if directory is None:
             directory = self.directory
 
+
+
         # Prepare documents
-        docs = self.prepare_documents(directory, chunk_size, chunk_overlap)
+        docs = self.prepare_documents(directory)
         
         # Create vectorstore (index)
         self.create_vectorstore(docs)
         
         # Save the index to the specified path
+        index_path = directory + '/' + index_path
+        
         self.save_index(index_path)
         
         print(f"Index created and saved at {index_path}")
@@ -160,3 +173,5 @@ class RAGPipeline:
             print("Result:\n", result['result'])
         except Exception as e:
             print(f"Error in RAG pipeline: {e}")
+
+
