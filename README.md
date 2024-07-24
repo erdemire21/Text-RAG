@@ -3,6 +3,8 @@ Retrieval Augmented Generation from a specified path containing pdf and txt file
 
 Compatible only with HuggingFace local models working on Nvidia gpu's.
 
+If you dont have an ampere gpu, make sure to remove                 attn_implementation="flash_attention_2"
+in load_model.
 
 **Install Packages**
 
