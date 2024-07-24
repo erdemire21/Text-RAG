@@ -4,13 +4,14 @@ Retrieval Augmented Generation from a specified path containing pdf and txt file
 Compatible only with HuggingFace local models working on Nvidia gpu's.
 
 If you dont have an ampere gpu, make sure to remove                 attn_implementation="flash_attention_2"
-in load_model.
+in load_model. You can check out the list of supported gpu's here
+[Ampere (microarchitecture)](https://en.wikipedia.org/wiki/Ampere_(microarchitecture))
 
 **Install Packages**
 
 To install the required packages, run the following command in your terminal:
 ```bash
-pip install numpy==1.24.1 langchain-community==0.2.7 langchain==0.2.9 transformers==4.42.4  bitsandbytes==0.43.2 flash-attn==2.6.2 sentence-transformers==3.0.1 faiss-cpu flash_attention pypdf
+pip install numpy==1.24.1 langchain-community==0.2.7 langchain==0.2.9 transformers==4.42.4  bitsandbytes==0.43.2 flash-attn==2.6.2 sentence-transformers==3.0.1 faiss-cpu==1.8.0.post1 flash_attention pypdf==4.3.1
 ```
 You also need to install cuda compatible pytorch
 ```bash
