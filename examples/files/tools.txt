@@ -1,0 +1,378 @@
+import cv2
+import numpy as np
+from typing import List, Tuple
+from pydub import AudioSegment
+
+def cut_video(input_file: str, output_file: str, start_time: float, end_time: float) -> None:
+    """
+    Cuts a video file from the specified start time to the specified end time.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the output video file.
+        start_time (float): The start time in seconds.
+        end_time (float): The end time in seconds.
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+    cap.set(cv2.CAP_PROP_POS_MSEC, start_time * 1000)
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret or cap.get(cv2.CAP_PROP_POS_MSEC) >= end_time * 1000:
+            break
+        out.write(frame)
+
+    cap.release()
+    out.release()
+    print("Video cut successfully!")
+
+def concatenate_videos(video_files: List[str], output_file: str) -> None:
+    """
+    Concatenates multiple video files into one.
+
+    Args:
+        video_files (List[str]): A list of paths to the video files to concatenate.
+        output_file (str): The path to save the concatenated video file.
+
+    Returns:
+        None
+    """
+    if not video_files:
+        print("No video files provided.")
+        return
+
+    cap = cv2.VideoCapture(video_files[0])
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+    for file in video_files:
+        cap = cv2.VideoCapture(file)
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            out.write(frame)
+        cap.release()
+
+    out.release()
+    print("Videos concatenated successfully!")
+
+def resize_video(input_file: str, output_file: str, new_size: Tuple[int, int]) -> None:
+    """
+    Resizes a video to a new size.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the resized video file.
+        new_size (Tuple[int, int]): The new size as (width, height).
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, new_size)
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        resized_frame = cv2.resize(frame, new_size)
+        out.write(resized_frame)
+
+    cap.release()
+    out.release()
+    print("Video resized successfully!")
+
+def add_watermark(input_file: str, output_file: str, watermark_file: str, position: Tuple[int, int]) -> None:
+    """
+    Adds a watermark to a video.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the watermarked video file.
+        watermark_file (str): The path to the watermark image file.
+        position (Tuple[int, int]): The (x, y) position to place the watermark.
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+    watermark = cv2.imread(watermark_file, cv2.IMREAD_UNCHANGED)
+    watermark = cv2.resize(watermark, (50, 50))  # Resize watermark if needed
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        # Add watermark
+        roi = frame[position[1]:position[1]+watermark.shape[0], position[0]:position[0]+watermark.shape[1]]
+        if watermark.shape[2] == 4:  # If watermark has an alpha channel
+            alpha = watermark[:, :, 3] / 255.0
+            for c in range(3):
+                roi[:, :, c] = roi[:, :, c] * (1 - alpha) + watermark[:, :, c] * alpha
+        else:
+            frame[position[1]:position[1]+watermark.shape[0], position[0]:position[0]+watermark.shape[1]] = watermark
+
+        out.write(frame)
+
+    cap.release()
+    out.release()
+    print("Watermark added successfully!")
+
+def extract_audio(input_file: str, output_file: str) -> None:
+    """
+    Extracts the audio from a video file and saves it as an MP3 file.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the extracted audio file.
+
+    Returns:
+        None
+    """
+    audio = AudioSegment.from_file(input_file)
+    audio.export(output_file, format="mp3")
+
+def detect_faces_and_write_video(input_file: str, output_file: str) -> None:
+    """
+    Detects faces in a video and writes the video with rectangles around detected faces.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the output video file with detected faces.
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+        for (x, y, w, h) in faces:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+
+        out.write(frame)
+
+    cap.release()
+    out.release()
+    print("Face detection video created successfully!")
+    
+def apply_gaussian_blur(input_file: str, output_file: str, sigma: float) -> None:
+    """
+    Applies a Gaussian blur to a video.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the blurred video file.
+        sigma (float): The standard deviation for Gaussian kernel.
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        blurred_frame = cv2.GaussianBlur(frame, (0, 0), sigma)
+        out.write(blurred_frame)
+
+    cap.release()
+    out.release()
+    print("Gaussian blur applied successfully!")
+    
+    
+def adjust_brightness(input_file: str, output_file: str, brightness_factor: float) -> None:
+    """
+    Adjusts the brightness of a video.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the brightness-adjusted video file.
+        brightness_factor (float): The factor by which to adjust the brightness.
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        adjusted_frame = cv2.convertScaleAbs(frame, alpha=brightness_factor, beta=0)
+        out.write(adjusted_frame)
+
+    cap.release()
+    out.release()
+    print("Brightness adjusted successfully!")
+
+def convert_to_grayscale(input_file: str, output_file: str) -> None:
+    """
+    Converts a video to grayscale.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the grayscale video file.
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, (width, height), isColor=False)
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        out.write(gray_frame)
+
+    cap.release()
+    out.release()
+    print("Converted to grayscale successfully!")
+
+def rotate_video(input_file: str, output_file: str, angle: float) -> None:
+    """
+    Rotates a video by a specified angle.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the rotated video file.
+        angle (float): The angle by which to rotate the video.
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+    center = (width // 2, height // 2)
+    rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        rotated_frame = cv2.warpAffine(frame, rotation_matrix, (width, height))
+        out.write(rotated_frame)
+
+    cap.release()
+    out.release()
+    print("Video rotated successfully!")
+
+def extract_frames(input_file: str, output_folder: str) -> None:
+    """
+    Extracts frames from a video and saves them as images.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_folder (str): The folder to save the extracted frames.
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    frame_count = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame_path = f"{output_folder}/frame_{frame_count:04d}.jpg"
+        cv2.imwrite(frame_path, frame)
+        frame_count += 1
+
+    cap.release()
+    print(f"Frames extracted successfully! Total frames: {frame_count}")
+
+def overlay_text(input_file: str, output_file: str, text: str, position: Tuple[int, int], font_size: float = 1, color: Tuple[int, int, int] = (255, 255, 255)) -> None:
+    """
+    Overlays text on a video.
+
+    Args:
+        input_file (str): The path to the input video file.
+        output_file (str): The path to save the video with text overlay.
+        text (str): The text to overlay.
+        position (Tuple[int, int]): The (x, y) position to place the text.
+        font_size (float, optional): The size of the font. Defaults to 1.
+        color (Tuple[int, int, int], optional): The color of the text in BGR format. Defaults to (255, 255, 255).
+
+    Returns:
+        None
+    """
+    cap = cv2.VideoCapture(input_file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        cv2.putText(frame, text, position, cv2.FONT_HERSHEY_SIMPLEX, font_size, color, 2, cv2.LINE_AA)
+        out.write(frame)
+
+    cap.release()
+    out.release()
+    print("Text overlay added successfully!")
