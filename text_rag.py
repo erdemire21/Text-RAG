@@ -90,16 +90,52 @@ class RAGPipeline:
         else:
             print("Vectorstore already exists. Please ensure you are loading the correct index.")
 
+
+
+    def is_ampere_gpu():
+        """Check if the system has an NVIDIA Ampere or later GPU."""
+        if not torch.cuda.is_available():
+            logging.info("CUDA is not available.")
+            return False
+        
+        cmd = "nvidia-smi --query-gpu=name --format=csv,noheader"
+        try:
+            output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
+            gpu_names = output.strip().split("\n")
+            
+            supported_gpus = ["A100", "A6000", "RTX 30", "RTX 40", "A30", "A40"]
+            
+            ampere_detected = False
+            for gpu_name in gpu_names:
+                if any(supported_gpu in gpu_name for supported_gpu in supported_gpus):
+                    ampere_detected = True
+                    break
+            
+            return ampere_detected
+        except Exception as e:
+            logging.warning(f"Error occurred while checking GPU: {e}")
+            return False
+
+
     def load_model(self):
         if self.llm is None:
             tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
-                device_map='cuda',
-                attn_implementation="flash_attention_2",
-                torch_dtype=torch.float16,
-                trust_remote_code=True
-            )
+            if is_ampere_gpu:
+                model = AutoModelForCausalLM.from_pretrained(
+                    self.model_name,
+                    device_map='cuda',
+                    attn_implementation="flash_attention_2",
+                    torch_dtype=torch.float16,
+                    trust_remote_code=True
+                )
+            else:
+                warnings.warn(f"Your GPU is not Ampere! Disabling the use of flash_attention module")
+                model = AutoModelForCausalLM.from_pretrained(
+                    self.model_name,
+                    device_map='cuda',
+                    torch_dtype=torch.float16,
+                    trust_remote_code=True
+                )
             pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=self.max_new_tokens)
             self.llm = HuggingFacePipeline(pipeline=pipe)
         return self.llm
