@@ -18,12 +18,17 @@ rag = RAGPipeline(model_name="microsoft/Phi-3-mini-4k-instruct", directory='your
 ```
 In this example, we create an instance of the `RAGPipeline` class, specifying the `directory` parameter as `'your_directory'`, the model as phi-3 and the `max_new_tokens` parameter as `1000`.
 
-### Step 2: Define the query
+### Step 2: Create an index
+```python
+rag.create_index()
+```
+
+### Step 3: Define the query
 ```python
 query = "What is the penalty function used in the evaluation?"
 ```
 
-### Step 3: Run the RAG pipeline
+### Step 4: Run the RAG pipeline
 ```python
 rag(query)
 ```
