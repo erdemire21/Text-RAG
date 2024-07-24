@@ -1,7 +1,8 @@
 # Text-RAG
 Retrieval Augmented Generation from a specified path containing pdf and txt files.
 
-Compatible only with HuggingFace local models.
+Compatible only with HuggingFace local models working on Nvidia gpu's.
+
 
 **Install Packages**
 
@@ -17,6 +18,8 @@ from text_rag import RAGPipeline
 rag = RAGPipeline(model_name="microsoft/Phi-3-mini-4k-instruct", directory='your_directory', max_new_tokens=1000)
 ```
 In this example, we create an instance of the `RAGPipeline` class, specifying the `directory` parameter as `'your_directory'`, the model as phi-3 and the `max_new_tokens` parameter as `1000`.
+
+Make sure that your directory contains at least one pdf or txt file. If not either add one or modify the code to read whatever your file type is in prepare documents part.
 
 ### Step 2: Create an index
 ```python
