@@ -8,7 +8,7 @@ Compatible only with HuggingFace local models working on Nvidia gpu's.
 
 To install the required packages, run the following command in your terminal:
 ```bash
-pip install numpy==1.26.4 langchain-community==0.2.7 langchain==0.2.9 transformers==4.42.4 torch==2.3.1
+pip install numpy==1.26.4 langchain-community==0.2.7 langchain==0.2.9 transformers==4.42.4 torch==2.3.1 bitsandbytes==0.43.2
 ```
 To get started
 ### Step 1: Create an instance of the `RAGPipeline` class
