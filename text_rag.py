@@ -97,7 +97,8 @@ class RAGPipeline:
                 self.model_name,
                 device_map='cuda',
                 attn_implementation="flash_attention_2",
-                torch_dtype=torch.float16
+                torch_dtype=torch.float16,
+                trust_remote_code=True
             )
             pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=self.max_new_tokens)
             self.llm = HuggingFacePipeline(pipeline=pipe)
