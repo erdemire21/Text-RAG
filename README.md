@@ -8,7 +8,7 @@ Compatible only with HuggingFace local models working on Nvidia gpu's.
 
 To install the required packages, run the following command in your terminal:
 ```bash
-pip install numpy==1.24.1 langchain-community==0.2.7 langchain==0.2.9 transformers==4.42.4  bitsandbytes==0.43.2 flash-attn==2.6.2 sentence-transformers==3.0.1 faiss-cpu flash_attention
+pip install numpy==1.24.1 langchain-community==0.2.7 langchain==0.2.9 transformers==4.42.4  bitsandbytes==0.43.2 flash-attn==2.6.2 sentence-transformers==3.0.1 faiss-cpu flash_attention pypdf
 ```
 You also need to install cuda compatible pytorch
 ```bash
